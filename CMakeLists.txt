@@ -2,10 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(STK)
 set(CMAKE_CXX_STANDARD 14)
 
-if (UNIX)
-    add_definitions(-D__LINUX_ALSA__)
-endif(UNIX)
-    add_definitions(-DHAVE_GETTIMEOFDAY -D__LITTLE_ENDIAN__ -DRAWWAVE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/rawwaves/\")
+
 
 SET(stk_src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/ADSR.cpp
@@ -104,6 +101,15 @@ SET(stk_src
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 add_library(stk STATIC ${stk_src})
 
+if (UNIX)
+    target_compile_definitions(stk INTERFACE -D__LINUX_ALSA__ INTERFACE -DHAVE_GETTIMEOFDAY PRIVATE -D__OS_LINUX__)
+elseif(WIN32)
+	target_compile_definitions(stk INTERFACE -D__WINDOWS_MM__ INTERFACE -D__WINDOWS_DS__ PRIVATE -D__OS_WINDOWS__)
+endif(UNIX)
+    target_compile_definitions(stk INTERFACE -D__LITTLE_ENDIAN__ INTERFACE -DRAWWAVE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/rawwaves/\")
+
 if(UNIX)
     target_link_libraries(stk pthread asound)
+elseif(WIN32)
+	target_link_libraries(stk winmm dsound)
 endif(UNIX)
